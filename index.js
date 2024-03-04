@@ -10,17 +10,25 @@ const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./src/page-template.js");
 
-const team = []; 
+const team = [];    // array of added employees
 
-const addEmployee = [
+const addEmployee = [ // question to decide whether to add another employee
     {
-        name: "AddEmployee",
+        name: "addEmployee",
         message: "Add employee:",
-        tyoe: "input"
+        type: "confirm"
+    }
+];
+
+const questions = [ // new employee's questions to ask the user
+    {
+        name: "name",
+        message: "Employee name:",
+        type: "input"
     },
     {
         name: "email",
-        message: "email",
+        message: "email:",
         type: "email"
     },
     {
@@ -28,6 +36,7 @@ const addEmployee = [
         message: "Employee ID:",
         type: "input"
     },
+
     {
         name: "role",
         message: "Role:",
@@ -101,6 +110,4 @@ function addAnotherEmployee() {
 };
 
 init();
-
-// TODO: Write Code to gather information about the development team members, and render the HTML file.
 
