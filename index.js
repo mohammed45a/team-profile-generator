@@ -4,110 +4,119 @@ const Intern = require("./lib/Intern");
 const inquirer = require("inquirer");
 const path = require("path");
 const fs = require("fs");
+const teamArray = [];
 
 const OUTPUT_DIR = path.resolve(__dirname, "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./src/page-template.js");
 
-const team = [];    // array of added employees
+function generateManager() {
+    inquirer.prompt([
+        nameQuestion,
+        IDQuestion,
+        emailQuestion,
+        officeQuestion,
+    ]).then((answer) => {
+        let manager = new Manager(answer.name, answer.id, answer.email, answer.officeNumber);
+        teamArray.push(manager);
+        menuQuestion();
+    });
+};
+function generateIntern() {
+    const newInt1 = new Intern;
+    inquirer.prompt([
+        nameQuestion,
+        IDQuestion,
+        emailQuestion,
+        schoolQuestion,
+    ]).then((answer) => {
+        let intern = new Intern(answer.name, answer.id, answer.email, answer.school);
+        teamArray.push(intern);
+        menuQuestion();
+    });
+};
+function generateEngineer() {
+    const newEngin1 = new Engineer;
+    inquirer.prompt([
+        nameQuestion,
+        IDQuestion,
+        emailQuestion,
+        gitQuestion,
+    ]).then((answer) => {
+        let engineer = new Engineer(answer.name, answer.id, answer.email, answer.github);
+        teamArray.push(engineer);
+        menuQuestion();
+    });
+};
 
-const addEmployee = [ // question to decide whether to add another employee
+// Questions
+const choices = [
     {
-        name: "addEmployee",
-        message: "Add employee:",
-        type: "confirm"
-    }
-];
-
-const questions = [ // new employee's questions to ask the user
-    {
-        name: "name",
-        message: "Employee name:",
-        type: "input"
-    },
-    {
-        name: "email",
-        message: "email:",
-        type: "email"
-    },
-    {
-        name: "id",
-        message: "Employee ID:",
-        type: "input"
-    },
-
-    {
-        name: "role",
-        message: "Role:",
         type: "list",
-        choices: ["Manager", "Engineer", "Intern"]
+        name: "menu",
+        message: "Enter another team member or generate team?",
+        choices: [Engineer, Intern, Finish]
+    }];
+
+const nameQuestion = {
+    type: "input",
+    name: "name",
+    message: "Please enter your name"
+};
+const IDQuestion = {
+    type: "input",
+    name: "id",
+    message: "Please enter your employee ID"
+};
+const emailQuestion = {
+    type: "input",
+    name: "email",
+    message: "Please enter email address",
+    validate: function (email) {
+        // Regex mail check (return true if valid mail)
+        return /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()\.,;\s@\"]+\.{0,1})+([^<>()\.,;:\s@\"]{2,}|[\d\.]+))$/.test(email);
     }
-]
-
-const managerQuestion = [ // unqiue question for a new manager
-    { 
-        name: "officeNumber",
-        message: "Office number:",
-        type: "input"
-    }
-];
-
-const engineerQuestion = [ // unqiue question for a new engineer
-    {
-        name: "github",
-        message: "GitHub ID:",
-        type: "input"
-    }
-];
-
-const internQuestion = [ // // unqiue question for a new intern
-    {
-        name: "school",
-        message: "School name:",
-        type: "input"
-    }
-];
-
-function init() {
-            
-    inquirer.prompt(questions).then(function(responses) {   // run inquirer on the questions array, output to responses
-        
-        if(responses.role === "Manager") { // if user enters 'manager' run the following code
-            inquirer.prompt(managerQuestion).then(function(managerAnswer) { // ask the manager question and output to managerAnswer
-            const manager = new Manager(responses.name, responses.id, responses.email, managerAnswer.officeNumber); // build the manager profile
-            team.push(manager); // send the new manager profile to the team array
-            addAnotherEmployee(); // run the addAnotherEmployee function to test whether to render or add more employees
-            });
-
-        } else if(responses.role === "Engineer") {  // if user enters 'engineer' run the following code
-            inquirer.prompt(engineerQuestion).then(function(engineerAnswer) { // ask the engineer question and output to engineerAnswer
-            const engineer = new Engineer(responses.name, responses.id, responses.email, engineerAnswer.github);    // build the engineer profile
-            team.push(engineer);    // send the new engineer profile to the team array
-            addAnotherEmployee();   // run the addAnotherEmployee function to test whether to render or add more employees
-            });
-
-        } else if(responses.role === "Intern") {    // if user enters 'intern' run the following code
-            inquirer.prompt(internQuestion).then(function(internAnswer) {   // ask the intern question and output to internAnswer
-            const intern = new Intern(responses.name, responses.id, responses.email, internAnswer.school);  // build the intern profile
-            team.push(intern);   // send the new intern profile to the team array
-            addAnotherEmployee();   // run the addAnotherEmployee function to test whether to render or add more employees
-            });
-        };
-    });
+};
+const officeQuestion = {
+    type: "input",
+    name: "officeNumber",
+    message: "Please enter your office number"
+};
+const schoolQuestion = {
+    type: "input",
+    name: "school",
+    message: "Please enter the name of your school"
+};
+const gitQuestion = {
+    type: "input",
+    name: "github",
+    message: "Please enter your github username"
 };
 
-function addAnotherEmployee() {
-    inquirer.prompt(addEmployee).then(function(response) { // ask the user the add another employee question
-        if(response.addEmployee) {
-            init();     // if they choose to add another, run the init function again
-        } else {
-            fs.writeFile(outputPath, render(team), function() { // once user finished adding, send the team array to the render function
-                console.log("HMTL file generated successully! at " + outputPath);
-            });
-        };
+function menuQuestion() {
+    inquirer.prompt(choices).then((menuAnswers) => {
+        const answers = displayMenuAnswers(menuAnswers);
     });
+}
+
+function displayMenuAnswers(data) {
+    if (data.menu === "Engineer") {
+        generateEngineer();
+    } else if (data.menu === "Intern") {
+        generateIntern();
+    } else {
+        Finish();
+    }
+}
+
+function Finish() {
+    buildPage();
+}
+const buildPage = () => {
+    fs.writeFile("./output/team.html", render(teamArray), (err) =>
+        err ? console.log(err) : console.log('Success!')
+    );
 };
 
-init();
-
+generateManager();
